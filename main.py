@@ -1,7 +1,21 @@
 from fastapi import FastAPI 
 from product import ProductCreate,ProductResponse
-
+from database import SessionLocal
+from sqlalchemy import text
 app=FastAPI()
+
+db=SessionLocal()
+
+@app.get("/receipts")
+def mbareceipts():
+    try:
+        result=db.execute(text("""select * from mba_receipts where auid like 'AIT26%' and type='package' limit 10"""))
+        rows=result.mappings().all();
+        for row in rows:
+            print(dict(row))
+    finally:
+        db.close()
+
 
 @app.get("/greet")
 def greeting():

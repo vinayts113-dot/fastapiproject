@@ -4,8 +4,8 @@ from database import SessionLocal,SessionMs
 from sqlalchemy import text
 import re
 from datetime import datetime
-app=FastAPI()
 
+app=FastAPI()
 db=SessionLocal()
 db1=SessionMs()
 
@@ -31,6 +31,8 @@ def get_bio_trans(datee=None,code=None,ach=1):
                     MAX(Logtime) as end_logtime,
                     MIN(DATEADD(MINUTE,-30,logtime)) as starttime,
                     MAX(DATEADD(MINUTE,-30,Logtime)) as endtime,
+                    DATEDIFF(Minute,MIN(Logtime),MAX(Logtime)) as minutes,
+                    concat(DATEDIFF(minute,MIN(Logtime),Max(Logtime))/60,':',DATEDIFF(minute,MIN(Logtime),MAX(Logtime))-DATEDIFF(minute,MIN(Logtime),MAX(Logtime))/60*60) as hr_min,
                     CAST(Employeecode as varchar(100)) as Employeecode,
                     CAST(Logdate as varchar(100)) as Logdate
                 FROM biotransauz

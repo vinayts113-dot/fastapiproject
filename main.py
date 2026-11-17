@@ -1,10 +1,54 @@
 from fastapi import FastAPI 
 from product import ProductCreate,ProductResponse
-from database import SessionLocal
+from database import SessionLocal,SessionMs
 from sqlalchemy import text
+import re
+from datetime import datetime
 app=FastAPI()
 
 db=SessionLocal()
+db1=SessionMs()
+
+
+@app.get("/biotrans")
+def get_bio_trans(datee=None,code=None,ach=1):
+    if not datee:
+        datee=datetime.now().strftime('%Y-%m-%d')
+    
+    print(datee)    
+    chk_date=datee
+
+    if re.match(r'^\d{4}-\d{2}(-\d{2})?$',chk_date):
+        chk_date=chk_date
+    else:
+        print("No proper date")
+        return
+
+    if ach==1:
+        try:
+            query="""SELECT 
+                    MIN(Logtime) as s_logtime,
+                    MAX(Logtime) as end_logtime,
+                    MIN(DATEADD(MINUTE,-30,logtime)) as starttime,
+                    MAX(DATEADD(MINUTE,-30,Logtime)) as endtime,
+                    CAST(Employeecode as varchar(100)) as Employeecode,
+                    CAST(Logdate as varchar(100)) as Logdate
+                FROM biotransauz
+                WHERE Logdate LIKE :date_pattern
+                GROUP BY Employeecode, Logdate """
+            res=db1.execute(text(query),{"date_pattern":(datee + '%')}) 
+            print(query)
+            rows=res.mappings().all()
+            #data=[dict(rows) for r in rows]
+            return{
+                "success":True,
+                "data":rows
+            }
+        finally:
+            db1.close()
+            # or can use "f{datee}%"
+
+
 
 @app.get("/receipts")
 def mbareceipts():
